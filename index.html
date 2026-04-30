@@ -151,6 +151,15 @@
     box-shadow:0 4px 14px rgba(255,107,53,.35);}
 
   /* PROGRESS OVERLAY */
+  /* CHROME WARNING */
+  .chrome-warn{background:#1A1A2E;border-radius:16px;padding:14px 16px;
+    margin-bottom:14px;display:flex;align-items:flex-start;gap:12px;}
+  .chrome-warn-icon{font-size:28px;flex-shrink:0;}
+  .chrome-warn-title{font-family:'Kanit',sans-serif;font-weight:700;font-size:15px;
+    color:#FFD166;margin-bottom:4px;}
+  .chrome-warn-desc{font-size:12px;color:rgba(255,255,255,.85);line-height:1.5;}
+  .chrome-warn-steps{font-size:12px;color:rgba(255,255,255,.7);margin-top:6px;line-height:1.8;}
+
   /* REMOVE.BG BANNER */
   .rmbg-banner{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:16px;
     padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:14px;
@@ -220,7 +229,7 @@
 <div class="hdr">
   <div class="logo">ICAP</div>
   <div style="flex:1">
-    <div class="h-title">Toys Label Maker - สร้างสัญลักษณ์ของเล่น🎨</div>
+    <div class="h-title">Toys Label Maker - สร้างสัญลักษณ์ของเล่น 🎨</div>
     <div class="h-sub">วงจร "ค้นหา-หยิบใช้-เก็บคืน"</div>
   </div>
   <button onclick="openTutorial()" style="background:rgba(255,255,255,.2);border:none;border-radius:10px;
@@ -229,6 +238,21 @@
 </div>
 
 <div class="main">
+
+  <!-- CHROME WARNING -->
+  <div class="chrome-warn" id="chromeWarn">
+    <div class="chrome-warn-icon">⚠️</div>
+    <div>
+      <div class="chrome-warn-title">⚠️ กรุณาใช้ Google Chrome เท่านั้น</div>
+      <div class="chrome-warn-desc">แอพนี้ต้องใช้ Chrome เพื่อให้ปริ้นท์และบันทึกข้อมูลทำงานได้ถูกต้อง<br>
+      <strong style="color:#FFD166;">LINE browser และ Safari ไม่รองรับค่ะ</strong></div>
+      <div class="chrome-warn-steps">
+        วิธีเปิดใน Chrome:<br>
+        1. Copy link นี้<br>
+        2. เปิด Chrome → วาง link แล้วกด Enter
+      </div>
+    </div>
+  </div>
 
   <!-- REMOVE.BG BANNER -->
   <div class="rmbg-banner">
@@ -656,6 +680,13 @@ function renderTutStep(){
   document.getElementById('tutNextBtn').textContent=
     tutStep===TUT_STEPS.length-1?'เริ่มใช้งาน ✅':'ถัดไป →';
 }
+
+// ===== BROWSER CHECK =====
+(function(){
+  const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+  const warn = document.getElementById('chromeWarn');
+  if(isChrome && warn) warn.style.display='none';
+})();
 
 // ===== INDEXEDDB PERSISTENCE =====
 const DB_NAME='icap_labels', DB_VER=1, STORE='toys';
