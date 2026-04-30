@@ -250,9 +250,13 @@
       <strong style="color:#FFD166;">กรุณา copy link แล้วเปิดใน Chrome หรือ Safari แทนค่ะ</strong></div>
       <div class="chrome-warn-steps">
         วิธีเปิดใน Chrome:<br>
-        1. <a href="https://icapthailand.github.io/toys-label-maker/" target="_blank"
-          style="color:#FFD166;font-weight:700;">กดที่นี่เพื่อ Copy link</a>
-          หรือ copy: icapthailand.github.io/toys-label-maker<br>
+        1. กดปุ่มด้านล่างเพื่อ copy link<br>
+        <button onclick="copyLink()" id="copyLinkBtn"
+          style="margin:6px 0;padding:7px 16px;background:#FFD166;color:#1A1A2E;
+          border:none;border-radius:8px;font-family:'Kanit',sans-serif;font-weight:700;
+          font-size:13px;cursor:pointer;width:100%;">
+          📋 Copy link แอพ
+        </button>
         2. เปิด Chrome → วาง link แล้วกด Enter
       </div>
     </div>
@@ -695,6 +699,34 @@ function renderTutStep(){
   });
   document.getElementById('tutNextBtn').textContent=
     tutStep===TUT_STEPS.length-1?'เริ่มใช้งาน ✅':'ถัดไป →';
+}
+
+function copyLink(){
+  const url='https://icapthailand.github.io/toys-label-maker/';
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>{
+      const btn=document.getElementById('copyLinkBtn');
+      btn.textContent='✅ Copy แล้ว! วางใน Chrome ได้เลย';
+      btn.style.background='#06D6A0';
+      btn.style.color='white';
+      setTimeout(()=>{btn.textContent='📋 Copy link แอพ';btn.style.background='#FFD166';btn.style.color='#1A1A2E';},3000);
+    }).catch(()=>fallbackCopy(url));
+  } else {
+    fallbackCopy(url);
+  }
+}
+function fallbackCopy(url){
+  const ta=document.createElement('textarea');
+  ta.value=url; ta.style.cssText='position:fixed;left:-9999px;';
+  document.body.appendChild(ta); ta.select();
+  try{
+    document.execCommand('copy');
+    const btn=document.getElementById('copyLinkBtn');
+    btn.textContent='✅ Copy แล้ว! วางใน Chrome ได้เลย';
+    btn.style.background='#06D6A0'; btn.style.color='white';
+    setTimeout(()=>{btn.textContent='📋 Copy link แอพ';btn.style.background='#FFD166';btn.style.color='#1A1A2E';},3000);
+  }catch(e){ alert('กรุณา copy link นี้ด้วยตัวเอง:\nhttps://icapthailand.github.io/toys-label-maker/'); }
+  document.body.removeChild(ta);
 }
 
 // ===== BROWSER CHECK =====
