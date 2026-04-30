@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ICAP Label Maker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&family=Kanit:wght@500;600;700&display=swap');
+
+  :root {
+    --primary:#FF6B35; --pl:#FF8F5E;
+    --bg:#FFF8F3; --dark:#1A1A2E; --muted:#999;
+    --border:#E8E0D8; --success:#06D6A0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--dark);min-height:100vh;}
+
+  .hdr{background:var(--primary);padding:13px 16px;display:flex;align-items:center;gap:10px;
+    position:sticky;top:0;z-index:200;box-shadow:0 3px 16px rgba(255,107,53,.35);}
+  .logo{width:36px;height:36px;background:white;border-radius:10px;display:flex;align-items:center;
+    justify-content:center;font-family:'Kanit',sans-serif;font-weight:700;color:var(--primary);font-size:13px;}
+  .h-title{font-family:'Kanit',sans-serif;font-weight:600;font-size:17px;color:white;}
+  .h-sub{font-size:11px;color:rgba(255,255,255,.8);}
+
+  .main{max-width:480px;margin:0 auto;padding:16px 16px 120px;}
+
+  .section-title{font-family:'Kanit',sans-serif;font-weight:600;font-size:15px;
+    color:var(--dark);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .count-badge{background:var(--primary);color:white;border-radius:20px;
+    padding:2px 10px;font-size:12px;font-weight:600;}
+
+  .toy-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+  .toy-card{background:white;border-radius:14px;padding:10px 12px;
+    display:flex;align-items:center;gap:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,.07);animation:slideIn .25s ease;}
+  @keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .toy-thumb{width:60px;height:60px;border-radius:10px;object-fit:contain;
+    background:#f5f5f5;border:1.5px solid #eee;flex-shrink:0;}
+  .toy-info{flex:1;min-width:0;}
+  .toy-name{font-family:'Sarabun',sans-serif;font-weight:700;font-size:14px;
+    color:var(--dark);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .toy-size-badge{display:inline-block;background:#FFF0EA;color:var(--primary);
+    border-radius:8px;padding:2px 8px;font-size:11px;font-weight:600;font-family:'Kanit',sans-serif;}
+  .toy-actions{display:flex;gap:6px;flex-shrink:0;}
+  .toy-btn{width:32px;height:32px;border:none;border-radius:8px;cursor:pointer;
+    font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+  .toy-edit{background:#FFF0EA;color:var(--primary);}
+  .toy-del{background:#FFF0F0;color:#E55;}
+
+  .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+  .empty-icon{font-size:56px;margin-bottom:12px;}
+  .empty-txt{font-size:15px;line-height:1.6;}
+
+  /* PAGES */
+  .page-preview{background:white;border-radius:16px;padding:12px;
+    box-shadow:0 4px 20px rgba(0,0,0,.1);margin-bottom:14px;}
+  .page-label{font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600;
+    display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .page-check{display:flex;align-items:center;gap:6px;cursor:pointer;}
+  .page-check input[type=checkbox]{width:18px;height:18px;accent-color:var(--primary);cursor:pointer;}
+  .page-check-label{font-family:'Kanit',sans-serif;font-size:12px;font-weight:600;
+    color:var(--primary);cursor:pointer;}
+
+  .a4{width:100%;aspect-ratio:.707;background:white;border:none;
+    border-radius:6px;padding:5px;overflow:hidden;}
+  .a4-grid{width:100%;height:100%;display:grid;}
+  .a4-cell{border:1.5px solid #ccc;border-radius:3px;background:white;
+    overflow:hidden;display:flex;flex-direction:column;}
+  .a4-cell-img{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
+    background:white;padding:1px;overflow:hidden;}
+  .a4-cell-img img{width:100%;height:100%;object-fit:contain;}
+  .a4-cell-lbl{background:white;border-top:none;text-align:center;
+    padding:2px 4px 6px;flex-shrink:0;font-family:'Sarabun',sans-serif;font-weight:400;
+    color:var(--dark);word-break:break-word;white-space:normal;line-height:1.3;}
+
+  /* FLOATING BUTTONS */
+  .fab-wrap{position:fixed;bottom:24px;right:20px;display:flex;flex-direction:column;
+    align-items:flex-end;gap:12px;z-index:150;}
+  .fab{width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:24px;
+    box-shadow:0 6px 20px rgba(0,0,0,.2);transition:all .2s;}
+  .fab:active{transform:scale(.92);}
+  .fab-add{background:var(--primary);color:white;box-shadow:0 6px 20px rgba(255,107,53,.45);}
+  .fab-pdf{background:var(--dark);color:white;}
+  .fab-label{background:rgba(0,0,0,.7);color:white;border-radius:20px;
+    padding:4px 10px;font-size:12px;font-family:'Kanit',sans-serif;
+    white-space:nowrap;pointer-events:none;}
+  .fab-row{display:flex;align-items:center;gap:8px;}
+
+  /* SELECT ALL ROW */
+  .select-all-row{display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:12px;padding:10px 12px;background:white;border-radius:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);}
+  .select-all-label{font-family:'Kanit',sans-serif;font-size:13px;font-weight:600;color:var(--dark);}
+  .select-all-btn{padding:6px 14px;background:var(--primary);color:white;border:none;
+    border-radius:8px;font-family:'Kanit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
+
+  /* MODAL */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
+    z-index:500;align-items:flex-end;justify-content:center;}
+  .overlay.open{display:flex;}
+  .modal{background:white;border-radius:24px 24px 0 0;width:100%;max-width:480px;
+    max-height:95vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.3);}
+  .modal-hdr{background:var(--primary);color:white;padding:14px 16px;
+    font-family:'Kanit',sans-serif;font-weight:600;font-size:16px;position:sticky;top:0;z-index:10;}
+  .modal-body{padding:16px;}
+
+  /* CROP */
+  .crop-area{width:100%;aspect-ratio:1;overflow:hidden;position:relative;
+    background:#222;border-radius:12px;margin-bottom:12px;touch-action:none;}
+  .crop-img{position:absolute;user-select:none;-webkit-user-drag:none;pointer-events:none;}
+  .crop-frame{position:absolute;inset:0;pointer-events:none;border:2.5px solid white;
+    border-radius:6px;box-shadow:0 0 0 2000px rgba(0,0,0,.4);}
+  .zoom-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .zoom-row label{font-size:13px;color:var(--muted);width:28px;flex-shrink:0;}
+  .zoom-row input[type=range]{flex:1;accent-color:var(--primary);}
+  .zoom-val{font-size:12px;color:var(--muted);width:38px;text-align:right;}
+  .name-inp{width:100%;border:2px solid var(--border);border-radius:10px;
+    padding:10px 14px;font-family:'Sarabun',sans-serif;font-size:17px;font-weight:700;
+    outline:none;transition:border-color .2s;margin-bottom:16px;color:var(--dark);}
+  .name-inp:focus{border-color:var(--primary);}
+
+  .size-label{font-family:'Kanit',sans-serif;font-weight:600;font-size:14px;
+    color:var(--dark);margin-bottom:10px;}
+  .size-options{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+  .size-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+  .size-row.single{grid-template-columns:1fr;}
+  .size-opt{border:2.5px solid var(--border);border-radius:14px;padding:10px;
+    cursor:pointer;transition:all .2s;background:white;display:flex;align-items:center;gap:10px;}
+  .size-opt:hover{border-color:var(--pl);}
+  .size-opt.selected{border-color:var(--primary);background:#FFF5F0;}
+  .mini-a4{flex-shrink:0;width:44px;height:62px;background:#f0f0f0;
+    border:1.5px solid #ccc;border-radius:3px;position:relative;overflow:hidden;}
+  .mini-a4-cell{background:var(--primary);opacity:.75;border-radius:2px;position:absolute;}
+  .size-info{flex:1;}
+  .size-name{font-family:'Kanit',sans-serif;font-weight:600;font-size:14px;color:var(--dark);}
+  .size-ratio{font-size:12px;color:var(--muted);margin-top:1px;}
+
+  .src-btn{width:100%;padding:14px 16px;background:white;border:2px solid var(--border);
+    border-radius:14px;cursor:pointer;display:flex;align-items:center;gap:14px;
+    text-align:left;transition:all .2s;}
+  .src-btn:hover{border-color:var(--primary);background:#FFF5F0;}
+  .btn-cancel{flex:1;padding:12px;background:white;border:2px solid var(--border);
+    border-radius:12px;font-family:'Kanit',sans-serif;font-size:15px;
+    font-weight:500;cursor:pointer;color:var(--muted);}
+  .btn-ok{flex:2;padding:12px;background:var(--primary);border:none;border-radius:12px;
+    font-family:'Kanit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;color:white;
+    box-shadow:0 4px 14px rgba(255,107,53,.35);}
+
+  /* PROGRESS OVERLAY */
+  /* REMOVE.BG BANNER */
+  .rmbg-banner{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:16px;
+    padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:14px;
+    box-shadow:0 4px 16px rgba(102,126,234,.3);}
+  .rmbg-icon{font-size:28px;flex-shrink:0;}
+  .rmbg-info{flex:1;min-width:0;}
+  .rmbg-title{font-family:'Kanit',sans-serif;font-weight:600;font-size:14px;color:white;margin-bottom:2px;}
+  .rmbg-desc{font-size:12px;color:rgba(255,255,255,.85);line-height:1.4;}
+  .rmbg-btn{flex-shrink:0;background:white;color:#764ba2;border:none;border-radius:10px;
+    padding:8px 12px;font-family:'Kanit',sans-serif;font-size:13px;font-weight:600;
+    cursor:pointer;text-decoration:none;white-space:nowrap;}
+
+  /* INSTRUCTION STEPS */
+  .steps-card{background:white;border-radius:16px;padding:14px 14px 10px;
+    box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:18px;}
+  .steps-title{font-family:'Kanit',sans-serif;font-weight:600;font-size:14px;
+    color:var(--dark);margin-bottom:12px;}
+  .steps-list{display:flex;flex-direction:column;gap:10px;}
+  .step-item{display:flex;align-items:flex-start;gap:10px;}
+  .step-num{width:24px;height:24px;background:var(--primary);color:white;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;
+    font-weight:700;font-size:12px;flex-shrink:0;margin-top:1px;}
+  .step-text{font-size:13px;color:var(--dark);line-height:1.5;}
+  .step-text strong{color:var(--primary);}
+
+  /* TUTORIAL MODAL */
+  .tut-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);
+    z-index:800;align-items:center;justify-content:center;padding:16px;}
+  .tut-overlay.open{display:flex;}
+  .tut-box{background:white;border-radius:24px;width:100%;max-width:400px;
+    overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4);}
+  .tut-hdr{padding:0;}
+  .tut-img{width:100%;height:180px;display:flex;align-items:center;justify-content:center;
+    font-size:64px;flex-direction:column;gap:8px;}
+  .tut-body{padding:20px;}
+  .tut-step-label{font-family:'Kanit',sans-serif;font-size:12px;font-weight:600;
+    color:var(--muted);margin-bottom:6px;letter-spacing:.5px;}
+  .tut-title{font-family:'Kanit',sans-serif;font-weight:700;font-size:20px;
+    color:var(--dark);margin-bottom:8px;}
+  .tut-desc{font-size:14px;color:#555;line-height:1.6;margin-bottom:20px;}
+  .tut-dots{display:flex;gap:6px;justify-content:center;margin-bottom:16px;}
+  .tut-dot{width:8px;height:8px;border-radius:50%;background:#ddd;transition:all .2s;}
+  .tut-dot.active{background:var(--primary);width:24px;border-radius:4px;}
+  .tut-actions{display:flex;gap:10px;}
+  .tut-skip{flex:1;padding:12px;background:white;border:2px solid var(--border);
+    border-radius:12px;font-family:'Kanit',sans-serif;font-size:14px;
+    font-weight:500;cursor:pointer;color:var(--muted);}
+  .tut-next{flex:2;padding:12px;background:var(--primary);border:none;
+    border-radius:12px;font-family:'Kanit',sans-serif;font-size:15px;
+    font-weight:600;cursor:pointer;color:white;
+    box-shadow:0 4px 14px rgba(255,107,53,.35);}
+
+  .progress-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);
+    z-index:900;align-items:center;justify-content:center;}
+  .progress-overlay.open{display:flex;}
+  .progress-box{background:white;border-radius:20px;padding:24px;width:280px;text-align:center;}
+  .progress-title{font-family:'Kanit',sans-serif;font-weight:600;font-size:16px;
+    color:var(--dark);margin-bottom:8px;}
+  .progress-sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
+  .progress-bar{width:100%;height:8px;background:#eee;border-radius:4px;overflow:hidden;}
+  .progress-inner{height:100%;background:var(--primary);border-radius:4px;
+    transition:width .3s;width:0%;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="logo">ICAP</div>
+  <div style="flex:1">
+    <div class="h-title">Label Maker 🎨</div>
+    <div class="h-sub">สร้างสัญลักษณ์ของเล่น</div>
+  </div>
+  <button onclick="openTutorial()" style="background:rgba(255,255,255,.2);border:none;border-radius:10px;
+    padding:8px 12px;color:white;font-family:'Kanit',sans-serif;font-size:13px;font-weight:500;
+    cursor:pointer;white-space:nowrap;">❓ วิธีใช้</button>
+</div>
+
+<div class="main">
+
+  <!-- REMOVE.BG BANNER -->
+  <div class="rmbg-banner">
+    <div class="rmbg-icon">✨</div>
+    <div class="rmbg-info">
+      <div class="rmbg-title">แนะนำ: ลบพื้นหลังรูปก่อน</div>
+      <div class="rmbg-desc">รูปจะดูสะอาดและสวยขึ้นมาก ใช้ฟรีที่ remove.bg</div>
+    </div>
+    <a href="https://www.remove.bg/" target="_blank" class="rmbg-btn">เปิดเว็บ →</a>
+  </div>
+
+  <!-- INSTRUCTION STEPS -->
+  <div class="steps-card">
+    <div class="steps-title">📋 วิธีใช้งาน</div>
+    <div class="steps-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-text"><strong>ลบพื้นหลัง</strong> ที่ remove.bg แล้วบันทึกรูปไว้ใน gallery</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-text"><strong>กดปุ่ม +</strong> เลือกถ่ายรูปหรือเลือกจาก gallery</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-text"><strong>ปรับรูปและตั้งชื่อ</strong> ลากรูป ซูม แล้วพิมพ์ชื่อของเล่น</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-text"><strong>เลือกขนาด</strong> ในหน้า A4 แล้วกดบันทึก</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">5</div>
+        <div class="step-text"><strong>ทำซ้ำ</strong> กับของเล่นชิ้นอื่น ระบบจะจัดหน้าให้อัตโนมัติ</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">6</div>
+        <div class="step-text"><strong>เลือกหน้า</strong> ที่ต้องการแล้วกดปุ่ม 🖨️ จากนั้นเลือก "Save as PDF" ใน dialog</div>
+      </div>
+    </div>
+  </div>
+  <div id="emptyState" class="empty-state">
+    <div class="empty-icon">🧸</div>
+    <div class="empty-txt">ยังไม่มีของเล่น<br>กดปุ่ม <strong style="color:var(--primary)">+</strong> ด้านล่างขวาเพื่อเริ่ม</div>
+  </div>
+
+  <div id="toySection" style="display:none">
+    <div class="section-title">
+      ของเล่นทั้งหมด
+      <span class="count-badge" id="toyCount">0</span>
+    </div>
+    <div class="toy-list" id="toyList"></div>
+  </div>
+
+  <div id="pagesSection" style="display:none">
+    <div class="section-title">ตัวอย่างหน้า A4</div>
+    <div class="select-all-row">
+      <span class="select-all-label" id="selectedCount">เลือก 0 หน้า</span>
+      <button class="select-all-btn" onclick="toggleSelectAll()">เลือกทั้งหมด</button>
+    </div>
+    <div id="pagesContainer"></div>
+  </div>
+</div>
+
+<!-- FLOATING BUTTONS -->
+<div class="fab-wrap">
+  <div class="fab-row" id="pdfRow" style="display:none">
+    <span class="fab-label">ปริ้นท์ / บันทึกเป็น PDF</span>
+    <button class="fab fab-pdf" id="fabPdf" onclick="doPrint()" style="display:none">🖨️</button>
+  </div>
+  <div class="fab-row">
+    <span class="fab-label">เพิ่มรูปของเล่น</span>
+    <button class="fab fab-add" onclick="document.getElementById('srcModal').classList.add('open')">＋</button>
+  </div>
+</div>
+
+<input type="file" id="fiCamera" accept="image/*" capture="environment" style="display:none">
+<input type="file" id="fiGallery" accept="image/*" multiple style="display:none">
+
+<!-- SOURCE PICKER -->
+<div class="overlay" id="srcModal">
+  <div class="modal">
+    <div class="modal-hdr">📷 เพิ่มรูปของเล่น</div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:12px;padding-bottom:24px;">
+      <button class="src-btn" onclick="pickCamera()">
+        <span style="font-size:28px">📷</span>
+        <div>
+          <div style="font-family:'Kanit',sans-serif;font-weight:600;font-size:16px;">ถ่ายรูปเลย</div>
+          <div style="font-size:13px;color:var(--muted);">เปิดกล้องถ่ายของเล่น</div>
+        </div>
+      </button>
+      <button class="src-btn" onclick="pickGallery()">
+        <span style="font-size:28px">🖼️</span>
+        <div>
+          <div style="font-family:'Kanit',sans-serif;font-weight:600;font-size:16px;">เลือกจาก Gallery</div>
+          <div style="font-size:13px;color:var(--muted);">เลือกรูปที่ถ่ายไว้แล้ว</div>
+        </div>
+      </button>
+      <button class="btn-cancel" onclick="closeSrcModal()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- CROP MODAL -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <div class="modal-hdr" id="modalTitle">➕ เพิ่มของเล่น</div>
+    <div class="modal-body">
+      <div class="crop-area" id="cropArea">
+        <img class="crop-img" id="cropImg" draggable="false" alt="">
+        <div class="crop-frame"></div>
+      </div>
+      <div class="zoom-row">
+        <label>ซูม</label>
+        <input type="range" id="zoomSlider" min="30" max="400" value="100">
+        <span class="zoom-val" id="zoomVal">100%</span>
+      </div>
+      <input class="name-inp" id="nameInp" type="text" placeholder="ชื่อของเล่น เช่น โมเดลไดโนเสาร์">
+      <div class="size-label">📐 เลือกขนาดในหน้า A4</div>
+      <div class="size-options" id="sizeOptions"></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
+        <button class="btn-ok" onclick="confirmToy()">✅ บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TUTORIAL MODAL -->
+<div class="tut-overlay" id="tutOverlay">
+  <div class="tut-box">
+    <div class="tut-hdr">
+      <div class="tut-img" id="tutImg"></div>
+    </div>
+    <div class="tut-body">
+      <div class="tut-step-label" id="tutLabel"></div>
+      <div class="tut-title" id="tutTitle"></div>
+      <div class="tut-desc" id="tutDesc"></div>
+      <div class="tut-dots" id="tutDots"></div>
+      <div class="tut-actions">
+        <button class="tut-skip" onclick="closeTutorial()">ข้ามไป</button>
+        <button class="tut-next" id="tutNextBtn" onclick="nextTutStep()">ถัดไป →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESS OVERLAY -->
+<div class="progress-overlay" id="progressOverlay">
+  <div class="progress-box">
+    <div class="progress-title">⏳ กำลังสร้าง PDF</div>
+    <div class="progress-sub" id="progressSub">กำลังประมวลผล...</div>
+    <div class="progress-bar"><div class="progress-inner" id="progressInner"></div></div>
+  </div>
+</div>
+
+<script>
+const SIZES=[
+  {id:'half',  name:'ใหญ่มาก', ratio:'1 รูป ต่อ ½ หน้า A4',  gcols:12,grows:8,  cellX:0,cellY:0,cellW:100,cellH:47},
+  {id:'qtr',   name:'ใหญ่',    ratio:'1 รูป ต่อ ¼ หน้า A4',  gcols:6, grows:8,  cellX:0,cellY:0,cellW:50, cellH:47},
+  {id:'sixth', name:'กลาง',    ratio:'1 รูป ต่อ ⅙ หน้า A4',  gcols:6, grows:5,  cellX:0,cellY:0,cellW:50, cellH:30},
+  {id:'ninth', name:'เล็ก',    ratio:'1 รูป ต่อ ⅑ หน้า A4',  gcols:4, grows:5,  cellX:0,cellY:0,cellW:33, cellH:30},
+  {id:'sixteen',name:'เล็กมาก',ratio:'1 รูป ต่อ 1/16 หน้า A4',gcols:3,grows:4,  cellX:0,cellY:0,cellW:25, cellH:24},
+];
+const GRID_COLS=12,GRID_ROWS=17;
+
+let toys=[],editingId=null,workingSrc=null,selectedSizeId='ninth';
+let cd={on:false,sx:0,sy:0,ox:0,oy:0};
+let pageSelected=[];
+let queue=[], queueTotal=0;
+
+function previewFS(gcols){ return gcols>=8?'17px':gcols>=6?'14px':gcols>=4?'12px':'9px'; }
+function pdfFS(gcols){ return gcols>=8?12:gcols>=6?9:gcols>=4?8:7; }
+
+// ===== SOURCE =====
+function closeSrcModal(){document.getElementById('srcModal').classList.remove('open');}
+function pickCamera(){closeSrcModal();document.getElementById('fiCamera').click();}
+function pickGallery(){closeSrcModal();document.getElementById('fiGallery').click();}
+
+function handleFiles(files){
+  const arr=Array.from(files);
+  if(!arr.length) return;
+  let loaded=0;
+  const srcs=new Array(arr.length);
+  arr.forEach((f,i)=>{
+    const r=new FileReader();
+    r.onload=ev=>{
+      srcs[i]=ev.target.result;
+      if(++loaded===arr.length){
+        const wasEmpty=queue.length===0;
+        queue=[...queue,...srcs.map(src=>({src}))];
+        queueTotal+=srcs.length;
+        if(wasEmpty) processQueue();
+      }
+    };
+    r.readAsDataURL(f);
+  });
+}
+document.getElementById('fiCamera').addEventListener('change',e=>{handleFiles(e.target.files);e.target.value='';});
+document.getElementById('fiGallery').addEventListener('change',e=>{handleFiles(e.target.files);e.target.value='';});
+
+function processQueue(){
+  if(!queue.length){ queueTotal=0; return; }
+  const current=queueTotal-queue.length+1;
+  openModalNew(queue[0].src, current, queueTotal);
+}
+
+// ===== MODAL =====
+function openModalNew(src, current, total){
+  editingId=null;workingSrc=src;selectedSizeId='ninth';
+  const titleEl=document.getElementById('modalTitle');
+  titleEl.textContent = total>1 ? `➕ เพิ่มของเล่น (${current}/${total})` : '➕ เพิ่มของเล่น';
+  document.getElementById('nameInp').value='';
+  document.getElementById('zoomSlider').value=100;
+  document.getElementById('zoomVal').textContent='100%';
+  const img=document.getElementById('cropImg');
+  img.src=src; img.onload=()=>posImg(0,0,100);
+  renderSizeOptions();
+  document.getElementById('modal').classList.add('open');
+}
+function openModalEdit(id){
+  const t=toys.find(x=>x.id===id);if(!t)return;
+  editingId=id;workingSrc=t.croppedSrc;selectedSizeId=t.sizeId;
+  document.getElementById('modalTitle').textContent='✏️ แก้ไขของเล่น';
+  document.getElementById('nameInp').value=t.name;
+  document.getElementById('zoomSlider').value=100;
+  document.getElementById('zoomVal').textContent='100%';
+  const img=document.getElementById('cropImg');
+  img.src=t.croppedSrc; img.onload=()=>posImg(0,0,100);
+  renderSizeOptions();
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');cd.on=false;}
+
+// ===== SIZE OPTIONS =====
+function renderSizeOptions(){
+  const wrap=document.getElementById('sizeOptions');
+  wrap.innerHTML='';
+  [[SIZES[0]],[SIZES[1],SIZES[2]],[SIZES[3],SIZES[4]]].forEach(row=>{
+    const rd=document.createElement('div');
+    rd.className='size-row'+(row.length===1?' single':'');
+    row.forEach(sz=>{
+      const d=document.createElement('div');
+      d.className='size-opt'+(sz.id===selectedSizeId?' selected':'');
+      d.innerHTML=`
+        <div class="mini-a4" id="mini_${sz.id}"></div>
+        <div class="size-info">
+          <div class="size-name">${sz.name}</div>
+          <div class="size-ratio">${sz.ratio}</div>
+        </div>`;
+      d.onclick=()=>{
+        selectedSizeId=sz.id;
+        document.querySelectorAll('.size-opt').forEach(x=>x.classList.remove('selected'));
+        d.classList.add('selected');
+      };
+      rd.appendChild(d);
+    });
+    wrap.appendChild(rd);
+  });
+  requestAnimationFrame(()=>{
+    SIZES.forEach(sz=>{
+      const mini=document.getElementById('mini_'+sz.id);
+      if(!mini)return;
+      const cell=document.createElement('div');
+      cell.className='mini-a4-cell';
+      cell.style.left=sz.cellX+'%';cell.style.top=sz.cellY+'%';
+      cell.style.width=sz.cellW+'%';cell.style.height=sz.cellH+'%';
+      mini.appendChild(cell);
+    });
+  });
+}
+
+// ===== CROP =====
+function posImg(cx,cy,zoom){
+  const img=document.getElementById('cropImg');
+  const area=document.getElementById('cropArea');
+  const w=area.offsetWidth*(zoom/100);
+  img.style.width=w+'px';img.style.height='auto';
+  img.style.left=cx+'px';img.style.top=cy+'px';
+}
+document.getElementById('zoomSlider').addEventListener('input',function(){
+  document.getElementById('zoomVal').textContent=this.value+'%';
+  const img=document.getElementById('cropImg');
+  const area=document.getElementById('cropArea');
+  img.style.width=(area.offsetWidth*(this.value/100))+'px';
+  img.style.height='auto';
+});
+const ca=document.getElementById('cropArea');
+function startDrag(x,y){const img=document.getElementById('cropImg');cd={on:true,sx:x,sy:y,ox:parseInt(img.style.left)||0,oy:parseInt(img.style.top)||0};}
+function moveDrag(x,y){if(!cd.on)return;const img=document.getElementById('cropImg');img.style.left=(cd.ox+x-cd.sx)+'px';img.style.top=(cd.oy+y-cd.sy)+'px';}
+ca.addEventListener('mousedown',e=>{e.preventDefault();startDrag(e.clientX,e.clientY);});
+document.addEventListener('mousemove',e=>{if(cd.on)moveDrag(e.clientX,e.clientY);});
+document.addEventListener('mouseup',()=>cd.on=false);
+ca.addEventListener('touchstart',e=>{const t=e.touches[0];startDrag(t.clientX,t.clientY);},{passive:true});
+ca.addEventListener('touchmove',e=>{e.preventDefault();const t=e.touches[0];moveDrag(t.clientX,t.clientY);},{passive:false});
+ca.addEventListener('touchend',()=>cd.on=false);
+
+// ===== CONFIRM =====
+function confirmToy(){
+  const imgEl=document.getElementById('cropImg');
+  const area=document.getElementById('cropArea');
+  const zoom=parseInt(document.getElementById('zoomSlider').value);
+  const name=document.getElementById('nameInp').value.trim();
+  const cx=parseInt(imgEl.style.left)||0,cy=parseInt(imgEl.style.top)||0;
+  // crop = exactly what's visible in the crop-area box
+  const aW=area.offsetWidth;
+  const aH=area.offsetHeight;
+  const iW=aW*(zoom/100);
+  const iH=imgEl.naturalHeight*(iW/imgEl.naturalWidth);
+  // scale factor from display px to natural image px
+  const toPx=imgEl.naturalWidth/iW;
+  // visible region in natural image coords
+  const srcX=Math.max(0,-cx*toPx);
+  const srcY=Math.max(0,-cy*toPx);
+  const srcW=Math.min(imgEl.naturalWidth-srcX, aW*toPx);
+  const srcH=Math.min(imgEl.naturalHeight-srcY, aH*toPx);
+  const outW=Math.round(srcW);
+  const outH=Math.round(srcH);
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.max(1,outW); canvas.height=Math.max(1,outH);
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,outW,outH);
+  ctx.drawImage(imgEl,srcX,srcY,srcW,srcH,0,0,outW,outH);
+  const croppedSrc=canvas.toDataURL('image/png');
+  if(editingId){
+    const t=toys.find(x=>x.id===editingId);
+    if(t){t.croppedSrc=croppedSrc;t.name=name;t.sizeId=selectedSizeId;}
+  } else {
+    toys.push({id:'toy_'+Date.now()+'_'+Math.random().toString(36).slice(2),croppedSrc,name,sizeId:selectedSizeId});
+  }
+  // queue: advance to next
+  if(!editingId && queue.length>0){
+    queue.shift();
+    closeModal();
+    renderAll();
+    if(queue.length>0){
+      const current=queueTotal-queue.length+1;
+      setTimeout(()=>openModalNew(queue[0].src, current, queueTotal), 250);
+    } else {
+      queueTotal=0;
+    }
+  } else {
+    closeModal(); renderAll();
+  }
+}
+
+// ===== TUTORIAL =====
+const TUT_STEPS=[
+  {
+    emoji:'✨',
+    label:'ก่อนเริ่มใช้',
+    title:'ลบพื้นหลังรูปก่อน',
+    desc:'เพื่อให้สัญลักษณ์สวยและสะอาด แนะนำให้ไปลบพื้นหลังรูปของเล่นที่เว็บ remove.bg ก่อน แล้วบันทึกรูปไว้ใน gallery',
+    link:'https://www.remove.bg/',
+    linkLabel:'เปิด remove.bg →',
+  },
+  {
+    emoji:'📷',
+    label:'ขั้นตอนที่ 1',
+    title:'กดปุ่ม + เพื่อเพิ่มรูป',
+    desc:'กดปุ่ม + ที่มุมขวาล่าง แล้วเลือกว่าจะถ่ายรูปเลย หรือเลือกจาก gallery',
+  },
+  {
+    emoji:'✂️',
+    label:'ขั้นตอนที่ 2',
+    title:'ลากและซูมรูปได้เลย',
+    desc:'ลากนิ้วเพื่อขยับตำแหน่ง เลื่อน slider ซูม แล้วพิมพ์ชื่อของเล่น ไม่ใส่ชื่อก็ได้ค่ะ',
+  },
+  {
+    emoji:'📐',
+    label:'ขั้นตอนที่ 3',
+    title:'เลือกขนาดในหน้า A4',
+    desc:'เลือกได้ 5 ขนาด ตั้งแต่ใหญ่มาก (½ หน้า) ถึงเล็กมาก (1/16 หน้า) ตามขนาดของเล่นจริงๆ',
+  },
+  {
+    emoji:'🔄',
+    label:'ขั้นตอนที่ 4',
+    title:'เพิ่มของเล่นชิ้นต่อไป',
+    desc:'กดปุ่ม + แล้วเพิ่มต่อได้เลย ระบบจัดหน้า A4 ให้อัตโนมัติ พอเต็มหน้าก็ขึ้นหน้าใหม่เองค่ะ',
+  },
+  {
+    emoji:'⬇️',
+    label:'ขั้นตอนที่ 5',
+    title:'ดาวน์โหลด PDF',
+    desc:'ติ๊กเลือกหน้าที่ต้องการ กดปุ่ม 🖨️ ที่มุมขวาล่าง แล้วเลือก "Save as PDF" หรือ "ปริ้นท์" ได้เลยค่ะ',
+  },
+];
+let tutStep=0;
+
+function openTutorial(){
+  tutStep=0; renderTutStep();
+  document.getElementById('tutOverlay').classList.add('open');
+}
+function closeTutorial(){
+  document.getElementById('tutOverlay').classList.remove('open');
+}
+function nextTutStep(){
+  if(tutStep<TUT_STEPS.length-1){tutStep++;renderTutStep();}
+  else closeTutorial();
+}
+function renderTutStep(){
+  const s=TUT_STEPS[tutStep];
+  const bgs=['#FFF0EA','#E8F8F7','#FFF8E7','#F0EBF8','#E8F8F7','#FFF0EA'];
+  const imgEl=document.getElementById('tutImg');
+  imgEl.style.background=bgs[tutStep];
+  imgEl.innerHTML=`<div style="font-size:64px">${s.emoji}</div>`;
+  document.getElementById('tutLabel').textContent=s.label;
+  document.getElementById('tutTitle').textContent=s.title;
+  let descHtml=s.desc;
+  if(s.link) descHtml+=`<br><br><a href="${s.link}" target="_blank"
+    style="color:var(--primary);font-weight:600;text-decoration:none;">${s.linkLabel}</a>`;
+  document.getElementById('tutDesc').innerHTML=descHtml;
+  const dots=document.getElementById('tutDots');
+  dots.innerHTML='';
+  TUT_STEPS.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='tut-dot'+(i===tutStep?' active':'');
+    dots.appendChild(d);
+  });
+  document.getElementById('tutNextBtn').textContent=
+    tutStep===TUT_STEPS.length-1?'เริ่มใช้งาน ✅':'ถัดไป →';
+}
+
+// ===== INDEXEDDB PERSISTENCE =====
+const DB_NAME='icap_labels', DB_VER=1, STORE='toys';
+let db=null;
+
+function openDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(DB_NAME,DB_VER);
+    req.onupgradeneeded=e=>{
+      e.target.result.createObjectStore(STORE,{keyPath:'id'});
+    };
+    req.onsuccess=e=>{db=e.target.result;res(db);};
+    req.onerror=e=>rej(e);
+  });
+}
+
+async function saveToys(){
+  if(!db) return;
+  const tx=db.transaction(STORE,'readwrite');
+  const store=tx.objectStore(STORE);
+  store.clear();
+  toys.forEach(t=>store.put(t));
+}
+
+async function loadToys(){
+  if(!db) return;
+  return new Promise(res=>{
+    const tx=db.transaction(STORE,'readonly');
+    const req=tx.objectStore(STORE).getAll();
+    req.onsuccess=e=>res(e.target.result||[]);
+    req.onerror=()=>res([]);
+  });
+}
+
+// patch renderAll to auto-save
+const _renderAll=renderAll;
+window.renderAll=function(){
+  _renderAll();
+  saveToys();
+};
+
+// init: load saved toys then render
+openDB().then(async ()=>{
+  const saved=await loadToys();
+  if(saved.length){ toys=saved; }
+  renderAll();
+  // show tutorial on first visit
+  if(!localStorage.getItem('icap_tut_done')){
+    openTutorial();
+    localStorage.setItem('icap_tut_done','1');
+  }
+}).catch(()=>{
+  renderAll();
+  if(!localStorage.getItem('icap_tut_done')){
+    openTutorial();
+    localStorage.setItem('icap_tut_done','1');
+  }
+});
+function delToy(id){toys=toys.filter(t=>t.id!==id);renderAll();}
+
+// ===== PACK =====
+function packToys(){
+  const pages=[];let grid=newGrid(),pageToys=[];
+  for(const toy of toys){
+    const sz=SIZES.find(s=>s.id===toy.sizeId);
+    const p=tryPlace(grid,sz.gcols,sz.grows,toy);
+    if(p){pageToys.push(p);}
+    else{pages.push(pageToys);grid=newGrid();pageToys=[];const p2=tryPlace(grid,sz.gcols,sz.grows,toy);if(p2)pageToys.push(p2);}
+  }
+  if(pageToys.length)pages.push(pageToys);
+  return pages;
+}
+function newGrid(){return Array.from({length:GRID_ROWS},()=>new Array(GRID_COLS).fill(false));}
+function tryPlace(grid,gcols,grows,toy){
+  for(let r=0;r<=GRID_ROWS-grows;r++)
+    for(let c=0;c<=GRID_COLS-gcols;c++)
+      if(canFit(grid,c,r,gcols,grows)){occupy(grid,c,r,gcols,grows);return{toy,col:c,row:r,gcols,grows};}
+  return null;
+}
+function canFit(grid,c,r,gcols,grows){for(let dr=0;dr<grows;dr++)for(let dc=0;dc<gcols;dc++)if(grid[r+dr][c+dc])return false;return true;}
+function occupy(grid,c,r,gcols,grows){for(let dr=0;dr<grows;dr++)for(let dc=0;dc<gcols;dc++)grid[r+dr][c+dc]=true;}
+
+// ===== SELECT ALL =====
+function toggleSelectAll(){
+  const pages=packToys();
+  const allSelected=pageSelected.every(v=>v);
+  pageSelected=pages.map(()=>!allSelected);
+  updateSelectedCount();
+  document.querySelectorAll('.page-chk').forEach((cb,i)=>cb.checked=pageSelected[i]);
+}
+function updateSelectedCount(){
+  const n=pageSelected.filter(v=>v).length;
+  document.getElementById('selectedCount').textContent=`เลือก ${n} หน้า`;
+  const hasSelection=n>0;
+  document.getElementById('fabPdf').style.display=hasSelection?'flex':'none';
+  document.getElementById('pdfRow').style.display=hasSelection?'flex':'none';
+}
+
+// ===== RENDER =====
+function renderAll(){
+  const ts=document.getElementById('toySection');
+  const es=document.getElementById('emptyState');
+  const ps=document.getElementById('pagesSection');
+  document.getElementById('toyCount').textContent=toys.length;
+  ts.style.display=toys.length?'block':'none';
+  es.style.display=toys.length?'none':'block';
+  ps.style.display=toys.length?'block':'none';
+
+  // toy list
+  const list=document.getElementById('toyList');
+  list.innerHTML='';
+  toys.forEach(toy=>{
+    const sz=SIZES.find(s=>s.id===toy.sizeId);
+    const d=document.createElement('div');d.className='toy-card';
+    d.innerHTML=`
+      <img class="toy-thumb" src="${toy.croppedSrc}" alt="">
+      <div class="toy-info">
+        <div class="toy-name">${toy.name||'(ไม่มีชื่อ)'}</div>
+        <span class="toy-size-badge">${sz.name} · ${sz.ratio}</span>
+      </div>
+      <div class="toy-actions">
+        <button class="toy-btn toy-edit">✏️</button>
+        <button class="toy-btn toy-del">🗑</button>
+      </div>`;
+    d.querySelector('.toy-edit').onclick=()=>openModalEdit(toy.id);
+    d.querySelector('.toy-del').onclick=()=>delToy(toy.id);
+    list.appendChild(d);
+  });
+
+  // pages
+  const pages=packToys();
+  // sync pageSelected array
+  while(pageSelected.length<pages.length)pageSelected.push(true);
+  pageSelected=pageSelected.slice(0,pages.length);
+
+  const container=document.getElementById('pagesContainer');
+  container.innerHTML='';
+  pages.forEach((pageToys,pi)=>{
+    const wrap=document.createElement('div');wrap.className='page-preview';
+
+    const lbl=document.createElement('div');lbl.className='page-label';
+    // checkbox for page selection
+    const chkWrap=document.createElement('label');chkWrap.className='page-check';
+    const chk=document.createElement('input');chk.type='checkbox';chk.className='page-chk';
+    chk.checked=pageSelected[pi];
+    chk.addEventListener('change',()=>{pageSelected[pi]=chk.checked;updateSelectedCount();});
+    const chkLbl=document.createElement('span');chkLbl.className='page-check-label';
+    chkLbl.textContent='เลือกหน้านี้';
+    chkWrap.appendChild(chk);chkWrap.appendChild(chkLbl);
+    lbl.innerHTML=`<span>📄 หน้า ${pi+1} · ${pageToys.length} ชิ้น</span>`;
+    lbl.appendChild(chkWrap);
+
+    const a4=document.createElement('div');a4.className='a4';
+    const g=document.createElement('div');g.className='a4-grid';
+    g.style.gridTemplateColumns=`repeat(${GRID_COLS},1fr)`;
+    g.style.gridTemplateRows=`repeat(${GRID_ROWS},1fr)`;
+    g.style.width='100%';g.style.height='100%';
+
+    pageToys.forEach(p=>{
+      const cell=document.createElement('div');cell.className='a4-cell';
+      cell.style.gridColumn=`${p.col+1}/span ${p.gcols}`;
+      cell.style.gridRow=`${p.row+1}/span ${p.grows}`;
+      const fs=previewFS(p.gcols);
+      const lblHtml=p.toy.name?`<div class="a4-cell-lbl" style="font-size:${fs}">${p.toy.name}</div>`:'';
+      cell.innerHTML=`<div class="a4-cell-img"><img src="${p.toy.croppedSrc}" alt=""></div>${lblHtml}`;
+      g.appendChild(cell);
+    });
+    a4.appendChild(g);
+    wrap.appendChild(lbl);wrap.appendChild(a4);
+    container.appendChild(wrap);
+  });
+
+  updateSelectedCount();
+}
+
+// ===== PDF DOWNLOAD =====
+function doPrint(){
+  const pages=packToys();
+  const selectedPages=pages.filter((_,i)=>pageSelected[i]);
+  if(!selectedPages.length){alert('กรุณาเลือกอย่างน้อย 1 หน้าค่ะ');return;}
+
+  // Build print HTML using same grid system as preview
+  let pagesHtml='';
+  selectedPages.forEach(pageToys=>{
+    let cells='';
+    pageToys.forEach(p=>{
+      const printFs='20pt';
+      const lblHtml=p.toy.name
+        ?`<div class="pl" style="font-size:${printFs}">${p.toy.name}</div>`:'';
+      cells+=`
+        <div class="pc" style="grid-column:${p.col+1}/span ${p.gcols};grid-row:${p.row+1}/span ${p.grows};">
+          <div class="pi"><img src="${p.toy.croppedSrc}" alt=""></div>
+          ${lblHtml}
+        </div>`;
+    });
+    pagesHtml+=`<div class="pg">${cells}</div>`;
+  });
+
+  const printWin=window.open('','_blank');
+  printWin.document.write(`<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Sarabun',sans-serif;background:white;}
+  @page{size:A4;margin:8mm;}
+  .pg{
+    width:194mm; height:277mm;
+    display:grid;
+    grid-template-columns:repeat(${GRID_COLS},1fr);
+    grid-template-rows:repeat(${GRID_ROWS},1fr);
+    page-break-after:always;
+    background:white;
+  }
+  .pc{
+    border:1mm solid #000;
+    overflow:hidden;display:flex;flex-direction:column;
+    background:white;
+  }
+  .pi{
+    flex:1;min-height:0;
+    display:flex;align-items:center;justify-content:center;
+    background:white;padding:1mm;overflow:hidden;
+  }
+  .pi img{max-width:100%;max-height:100%;object-fit:contain;}
+  .pl{
+    text-align:center;padding:1mm 2mm 2.5mm;flex-shrink:0;
+    font-family:'Sarabun',sans-serif;font-weight:400;
+    color:#1A1A2E;word-break:break-word;white-space:normal;line-height:1.4;
+    background:white;
+  }
+</style>
+</head><body>
+${pagesHtml}
+<script>
+  // wait for images then print
+  window.onload=function(){
+    const imgs=document.querySelectorAll('img');
+    let loaded=0;
+    if(!imgs.length){window.print();return;}
+    imgs.forEach(img=>{
+      if(img.complete){if(++loaded===imgs.length)window.print();}
+      else{img.onload=img.onerror=()=>{if(++loaded===imgs.length)window.print();};}
+    });
+  };
+<\/script>
+</body></html>`);
+  printWin.document.close();
+}
+// renderAll() called by IndexedDB init above
+</script>
+</body>
+</html>
