@@ -229,7 +229,7 @@
 <div class="hdr">
   <div class="logo">ICAP</div>
   <div style="flex:1">
-    <div class="h-title">Toys Label Maker - สร้างสัญลักษณ์ของเล่น 🎨</div>
+    <div class="h-title">Toys Label Maker สร้างสัญลักษณ์ของเล่น 🎨</div>
     <div class="h-sub">วงจร "ค้นหา-หยิบใช้-เก็บคืน"</div>
   </div>
   <button onclick="openTutorial()" style="background:rgba(255,255,255,.2);border:none;border-radius:10px;
@@ -243,12 +243,12 @@
   <div class="chrome-warn" id="chromeWarn">
     <div class="chrome-warn-icon">⚠️</div>
     <div>
-      <div class="chrome-warn-title">⚠️ กรุณาใช้ Google Chrome</div>
-      <div class="chrome-warn-desc">เพื่อให้การปริ้นท์และบันทึกข้อมูลทำงานได้ถูกต้องที่สุด<br>
-      <strong style="color:#FFD166;">ขอบคุณค่ะ</strong></div>
+      <div class="chrome-warn-title">⚠️ กรุณาเปิดใน Chrome หรือ Safari</div>
+      <div class="chrome-warn-desc">แอพนี้ไม่รองรับการใช้งานผ่าน LINE browser<br>
+      <strong style="color:#FFD166;">กรุณา copy link แล้วเปิดใน Chrome หรือ Safari แทนค่ะ</strong></div>
       <div class="chrome-warn-steps">
         วิธีเปิดใน Chrome:<br>
-        1. Copy link นี้ https://icapthailand.github.io/toys-label-maker/ <br>
+        1. Copy link นี้ https://icapthailand.github.io/toys-label-maker/<br>
         2. เปิด Chrome → วาง link แล้วกด Enter
       </div>
     </div>
@@ -683,9 +683,16 @@ function renderTutStep(){
 
 // ===== BROWSER CHECK =====
 (function(){
-  const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+  const ua = navigator.userAgent;
+  // LINE browser contains "Line/" in UA
+  const isLine = /Line\//i.test(ua);
+  // Chrome on desktop/Android
+  const isChrome = /Chrome/.test(ua) && /Google Inc/.test(navigator.vendor) && !isLine;
+  // Safari (but not Chrome)
+  const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua) && !isLine;
   const warn = document.getElementById('chromeWarn');
-  if(isChrome && warn) warn.style.display='none';
+  // Show warning only on LINE browser or other unsupported browsers
+  if((isChrome || isSafari) && warn) warn.style.display='none';
 })();
 
 // ===== INDEXEDDB PERSISTENCE =====
