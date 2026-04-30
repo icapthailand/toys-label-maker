@@ -220,8 +220,8 @@
 <div class="hdr">
   <div class="logo">ICAP</div>
   <div style="flex:1">
-    <div class="h-title">Toy Label Maker - สร้างสัญลักษณ์ของเล่น 🎨</div>
-    <div class="h-sub">วงจร "ค้นหา-หยิบใข้-เก็บคืน"</div>
+    <div class="h-title">Toys Label Maker - สร้างสัญลักษณ์ของเล่น🎨</div>
+    <div class="h-sub">วงจร "ค้นหา-หยิบใช้-เก็บคืน"</div>
   </div>
   <button onclick="openTutorial()" style="background:rgba(255,255,255,.2);border:none;border-radius:10px;
     padding:8px 12px;color:white;font-family:'Kanit',sans-serif;font-size:13px;font-weight:500;
@@ -840,79 +840,68 @@ function renderAll(){
 }
 
 // ===== PDF DOWNLOAD =====
-function doPrint(){
-  const pages=packToys();
-  const selectedPages=pages.filter((_,i)=>pageSelected[i]);
-  if(!selectedPages.length){alert('กรุณาเลือกอย่างน้อย 1 หน้าค่ะ');return;}
-
-  // Build print HTML using same grid system as preview
+function buildPrintHtml(selectedPages){
   let pagesHtml='';
   selectedPages.forEach(pageToys=>{
     let cells='';
     pageToys.forEach(p=>{
-      const printFs='20pt';
       const lblHtml=p.toy.name
-        ?`<div class="pl" style="font-size:${printFs}">${p.toy.name}</div>`:'';
-      cells+=`
-        <div class="pc" style="grid-column:${p.col+1}/span ${p.gcols};grid-row:${p.row+1}/span ${p.grows};">
-          <div class="pi"><img src="${p.toy.croppedSrc}" alt=""></div>
-          ${lblHtml}
-        </div>`;
+        ?`<div class="pl">${p.toy.name}</div>`:'';
+      cells+=`<div class="pc" style="grid-column:${p.col+1}/span ${p.gcols};grid-row:${p.row+1}/span ${p.grows};">
+        <div class="pi"><img src="${p.toy.croppedSrc}" alt=""></div>${lblHtml}</div>`;
     });
     pagesHtml+=`<div class="pg">${cells}</div>`;
   });
-
-  const printWin=window.open('','_blank');
-  printWin.document.write(`<!DOCTYPE html>
-<html><head>
-<meta charset="UTF-8">
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Sarabun',sans-serif;background:white;}
   @page{size:A4;margin:20mm;}
-  .pg{
-    width:170mm; height:257mm;
-    display:grid;
+  .pg{width:170mm;height:257mm;display:grid;
     grid-template-columns:repeat(${GRID_COLS},1fr);
     grid-template-rows:repeat(${GRID_ROWS},1fr);
-    page-break-after:always;
-    background:white;
-  }
-  .pc{
-    border:1mm solid #000;
-    overflow:hidden;display:flex;flex-direction:column;
-    background:white;
-  }
-  .pi{
-    flex:1;min-height:0;
-    display:flex;align-items:center;justify-content:center;
-    background:white;padding:1mm;overflow:hidden;
-  }
+    page-break-after:always;background:white;}
+  .pc{border:1mm solid #000;overflow:hidden;display:flex;flex-direction:column;background:white;}
+  .pi{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
+    background:white;padding:1mm;overflow:hidden;}
   .pi img{max-width:100%;max-height:100%;object-fit:contain;}
-  .pl{
-    text-align:center;padding:1mm 2mm 2.5mm;flex-shrink:0;
-    font-family:'Sarabun',sans-serif;font-weight:400;
-    color:#1A1A2E;word-break:break-word;white-space:normal;line-height:1.4;
-    background:white;
-  }
-</style>
-</head><body>
-${pagesHtml}
-<script>
-  // wait for images then print
-  window.onload=function(){
-    const imgs=document.querySelectorAll('img');
-    let loaded=0;
-    if(!imgs.length){window.print();return;}
-    imgs.forEach(img=>{
-      if(img.complete){if(++loaded===imgs.length)window.print();}
-      else{img.onload=img.onerror=()=>{if(++loaded===imgs.length)window.print();};}
-    });
+  .pl{text-align:center;padding:1mm 2mm 2.5mm;flex-shrink:0;font-size:20pt;
+    font-family:'Sarabun',sans-serif;font-weight:400;color:#1A1A2E;
+    word-break:break-word;white-space:normal;line-height:1.4;background:white;}
+</style></head><body>${pagesHtml}</body></html>`;
+}
+
+function doPrint(){
+  const pages=packToys();
+  const selectedPages=pages.filter((_,i)=>pageSelected[i]);
+  if(!selectedPages.length){alert('กรุณาเลือกอย่างน้อย 1 หน้าค่ะ');return;}
+
+  const html=buildPrintHtml(selectedPages);
+
+  // Use iframe instead of window.open — works on mobile
+  let iframe=document.getElementById('printFrame');
+  if(iframe) iframe.remove();
+  iframe=document.createElement('iframe');
+  iframe.id='printFrame';
+  iframe.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;border:none;';
+  document.body.appendChild(iframe);
+
+  const doc=iframe.contentDocument||iframe.contentWindow.document;
+  doc.open(); doc.write(html); doc.close();
+
+  // Wait for images to load then print
+  const imgs=iframe.contentDocument.querySelectorAll('img');
+  let loaded=0;
+  const tryPrint=()=>{
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
   };
-<\/script>
-</body></html>`);
-  printWin.document.close();
+  if(!imgs.length){ setTimeout(tryPrint,300); return; }
+  imgs.forEach(img=>{
+    if(img.complete){ if(++loaded===imgs.length) setTimeout(tryPrint,300); }
+    else{ img.onload=img.onerror=()=>{ if(++loaded===imgs.length) setTimeout(tryPrint,300); }; }
+  });
 }
 // renderAll() called by IndexedDB init above
 </script>
