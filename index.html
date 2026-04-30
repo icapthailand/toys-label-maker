@@ -229,7 +229,7 @@
 <div class="hdr">
   <div class="logo">ICAP</div>
   <div style="flex:1">
-    <div class="h-title">Toys Label Maker สร้างสัญลักษณ์ของเล่น 🎨</div>
+    <div class="h-title">Toys Label Maker - สร้างสัญลักษณ์ของเล่น 🎨</div>
     <div class="h-sub">วงจร "ค้นหา-หยิบใช้-เก็บคืน"</div>
   </div>
   <button onclick="openTutorial()" style="background:rgba(255,255,255,.2);border:none;border-radius:10px;
@@ -248,7 +248,9 @@
       <strong style="color:#FFD166;">กรุณา copy link แล้วเปิดใน Chrome หรือ Safari แทนค่ะ</strong></div>
       <div class="chrome-warn-steps">
         วิธีเปิดใน Chrome:<br>
-        1. Copy link นี้ https://icapthailand.github.io/toys-label-maker/<br>
+        1. <a href="https://icapthailand.github.io/toys-label-maker/" target="_blank"
+          style="color:#FFD166;font-weight:700;">กดที่นี่เพื่อ Copy link</a>
+          หรือ copy: icapthailand.github.io/toys-label-maker<br>
         2. เปิด Chrome → วาง link แล้วกด Enter
       </div>
     </div>
@@ -480,13 +482,16 @@ function openModalNew(src, current, total){
 }
 function openModalEdit(id){
   const t=toys.find(x=>x.id===id);if(!t)return;
-  editingId=id;workingSrc=t.croppedSrc;selectedSizeId=t.sizeId;
+  editingId=id;
+  // use originalSrc if available so user can re-crop from full image
+  workingSrc=t.originalSrc||t.croppedSrc;
+  selectedSizeId=t.sizeId;
   document.getElementById('modalTitle').textContent='✏️ แก้ไขของเล่น';
   document.getElementById('nameInp').value=t.name;
   document.getElementById('zoomSlider').value=100;
   document.getElementById('zoomVal').textContent='100%';
   const img=document.getElementById('cropImg');
-  img.src=t.croppedSrc; img.onload=()=>posImg(0,0,100);
+  img.src=workingSrc; img.onload=()=>posImg(0,0,100);
   renderSizeOptions();
   document.getElementById('modal').classList.add('open');
 }
@@ -585,8 +590,13 @@ function confirmToy(){
   if(editingId){
     const t=toys.find(x=>x.id===editingId);
     if(t){t.croppedSrc=croppedSrc;t.name=name;t.sizeId=selectedSizeId;}
+    // keep originalSrc unchanged
   } else {
-    toys.push({id:'toy_'+Date.now()+'_'+Math.random().toString(36).slice(2),croppedSrc,name,sizeId:selectedSizeId});
+    toys.push({
+      id:'toy_'+Date.now()+'_'+Math.random().toString(36).slice(2),
+      originalSrc:workingSrc, // save original for re-editing
+      croppedSrc,name,sizeId:selectedSizeId
+    });
   }
   // queue: advance to next
   if(!editingId && queue.length>0){
