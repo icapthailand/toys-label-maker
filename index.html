@@ -67,7 +67,18 @@
   .a4{width:100%;aspect-ratio:.707;background:white;border:none;
     border-radius:6px;padding:5px;overflow:hidden;}
   .a4-grid{width:100%;height:100%;display:grid;}
-  .a4-cell{border:1.5px solid #ccc;border-radius:3px;background:white;
+  .cell-overlay{
+    position:absolute;inset:0;background:rgba(0,0,0,.45);
+    display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    border-radius:3px;z-index:5;}
+  .a4-cell:hover .cell-overlay,.a4-cell:active .cell-overlay{display:flex;}
+  .cell-action-btn{
+    width:80%;padding:6px 10px;border:none;border-radius:8px;
+    font-family:'Kanit',sans-serif;font-size:12px;font-weight:600;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .cell-edit{background:white;color:var(--primary);}
+  .cell-delete{background:#EF4444;color:white;}
+    .a4-cell{border:1.5px solid #ccc;border-radius:3px;background:white;
     position:relative;overflow:hidden;display:flex;flex-direction:column;}
   .a4-cell:hover .cell-edit-btn{opacity:1;}
   .cell-edit-btn{position:absolute;top:2px;right:2px;width:20px;height:20px;
@@ -115,7 +126,7 @@
   .modal-body{padding:12px 16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px;}
 
   /* CROP */
-  .crop-area{width:100%;height:200px;overflow:hidden;position:relative;
+  .crop-area{width:100%;height:260px;overflow:hidden;position:relative;
     background:#222;border-radius:12px;flex-shrink:0;touch-action:none;}
   .crop-img{position:absolute;user-select:none;-webkit-user-drag:none;pointer-events:none;}
   .crop-frame{position:absolute;inset:0;pointer-events:none;border:2.5px solid white;
@@ -124,27 +135,29 @@
   .zoom-row label{font-size:13px;color:var(--muted);width:28px;flex-shrink:0;}
   .zoom-row input[type=range]{flex:1;accent-color:var(--primary);}
   .zoom-val{font-size:12px;color:var(--muted);width:38px;text-align:right;}
-  .name-inp{width:100%;border:2px solid var(--border);border-radius:10px;
+  .name-inp{width:100%;border:2px solid var(--primary-light);border-radius:10px;
     padding:10px 14px;font-family:'Sarabun',sans-serif;font-size:17px;font-weight:700;
-    outline:none;transition:border-color .2s;color:var(--dark);flex-shrink:0;}
-  .name-inp:focus{border-color:var(--primary);}
+    outline:none;transition:all .2s;color:var(--dark);flex-shrink:0;
+    background:#FFF5F0;}
+  .name-inp:focus{border-color:var(--primary);background:white;}
 
   .size-label{font-family:'Kanit',sans-serif;font-weight:600;font-size:13px;
     color:var(--dark);flex-shrink:0;}
   .modal-footer{flex-shrink:0;padding-top:8px;}
-  .size-options{display:flex;flex-direction:column;gap:6px;flex:1;overflow-y:auto;}
-  .size-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
-  .size-row.single{grid-template-columns:1fr;}
-  .size-opt{border:2.5px solid var(--border);border-radius:12px;padding:7px 10px;
-    cursor:pointer;transition:all .2s;background:white;display:flex;align-items:center;gap:8px;}
+  .size-options{display:flex;flex-direction:row;gap:6px;flex-shrink:0;}
+  .size-row{display:contents;}
+  .size-row.single{display:contents;}
+  .size-opt{flex:1;border:2.5px solid var(--border);border-radius:12px;padding:6px 4px;
+    cursor:pointer;transition:all .2s;background:white;
+    display:flex;flex-direction:column;align-items:center;gap:4px;}
   .size-opt:hover{border-color:var(--pl);}
   .size-opt.selected{border-color:var(--primary);background:#FFF5F0;}
-  .mini-a4{flex-shrink:0;width:34px;height:48px;background:#f0f0f0;
-    border:1.5px solid #ccc;border-radius:3px;position:relative;overflow:hidden;}
+  .mini-a4{width:28px;height:40px;background:#f0f0f0;
+    border:1.5px solid #ccc;border-radius:3px;position:relative;overflow:hidden;flex-shrink:0;}
   .mini-a4-cell{background:var(--primary);opacity:.75;border-radius:2px;position:absolute;}
-  .size-info{flex:1;}
-  .size-name{font-family:'Kanit',sans-serif;font-weight:600;font-size:14px;color:var(--dark);}
-  .size-ratio{font-size:12px;color:var(--muted);margin-top:1px;}
+  .size-info{text-align:center;}
+  .size-name{font-family:'Kanit',sans-serif;font-weight:700;font-size:11px;color:var(--dark);line-height:1.2;}
+  .size-ratio{font-size:10px;color:var(--muted);margin-top:1px;}
 
   .src-btn{width:100%;padding:14px 16px;background:white;border:2px solid var(--border);
     border-radius:14px;cursor:pointer;display:flex;align-items:center;gap:14px;
@@ -314,19 +327,24 @@
 
   <div id="toySection" style="display:none">
     <div class="section-title">
-      ของเล่นทั้งหมด
-      <span class="count-badge" id="toyCount">0</span>
+      ของเล่นทั้งหมด <span class="count-badge" id="toyCount">0</span>
       <button onclick="clearAllToys()" style="margin-left:auto;padding:5px 12px;
         background:#FFF0F0;color:#E55;border:1.5px solid #E55;border-radius:8px;
         font-family:'Kanit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">
         🗑 ล้างทั้งหมด
       </button>
     </div>
-    <div class="toy-list" id="toyList"></div>
   </div>
 
   <div id="pagesSection" style="display:none">
-    <div class="section-title">ตัวอย่างหน้า A4</div>
+    <div class="section-title" style="display:flex;align-items:center;">
+      ตัวอย่างหน้า A4
+      <button onclick="clearAllToys()" style="margin-left:auto;padding:6px 14px;
+        background:#FFF0F0;color:#E55;border:1.5px solid #E55;border-radius:8px;
+        font-family:'Kanit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+        🗑 ล้างทั้งหมด
+      </button>
+    </div>
     <div class="select-all-row">
       <span class="select-all-label" id="selectedCount">เลือก 0 หน้า</span>
       <button class="select-all-btn" onclick="toggleSelectAll()">เลือกทั้งหมด</button>
@@ -349,6 +367,19 @@
 
 <input type="file" id="fiCamera" accept="image/*" capture="environment" style="display:none">
 <input type="file" id="fiGallery" accept="image/*" multiple style="display:none">
+
+<!-- CONFIRM MODAL -->
+<div class="overlay" id="confirmOverlay">
+  <div class="modal" style="height:auto;">
+    <div class="modal-hdr" id="confirmMsg">ยืนยัน</div>
+    <div class="modal-body" style="display:flex;gap:10px;padding:16px;">
+      <button class="btn-cancel" onclick="closeConfirm()">ยกเลิก</button>
+      <button id="confirmOkBtn" style="flex:2;padding:12px;background:#EF4444;border:none;
+        border-radius:12px;font-family:'Kanit',sans-serif;font-size:15px;font-weight:600;
+        cursor:pointer;color:white;">🗑 ลบ</button>
+    </div>
+  </div>
+</div>
 
 <!-- SOURCE PICKER -->
 <div class="overlay" id="srcModal">
@@ -392,8 +423,13 @@
         border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;flex-shrink:0;">
         💡 <span>ซูมออกจนเห็นของเล่น<strong style="color:var(--primary)">ทั้งชิ้น</strong> แล้วลากปรับตำแหน่ง</span>
       </div>
+      <button onclick="rotateCropImg()" style="padding:5px 12px;background:white;
+        border:1.5px solid var(--border);border-radius:8px;font-family:'Sarabun',sans-serif;
+        font-size:12px;cursor:pointer;color:var(--muted);align-self:flex-start;flex-shrink:0;">
+        🔄 หมุน 90°
+      </button>
       <input class="name-inp" id="nameInp" type="text" placeholder="ชื่อของเล่น เช่น โมเดลไดโนเสาร์">
-      <div class="size-label">📐 เลือกขนาดในหน้า A4</div>
+      <div style="font-size:12px;color:var(--muted);font-family:'Kanit',sans-serif;font-weight:600;flex-shrink:0;">📐 ขนาด</div>
       <div class="size-options" id="sizeOptions"></div>
       <div class="modal-footer" style="display:flex;gap:10px;">
         <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
@@ -433,15 +469,15 @@
 
 <script>
 const SIZES=[
-  {id:'half',  name:'ใหญ่มาก', ratio:'1 รูป ต่อ ½ หน้า A4',  gcols:12,grows:8,  cellX:0,cellY:0,cellW:100,cellH:47},
-  {id:'qtr',   name:'ใหญ่',    ratio:'1 รูป ต่อ ¼ หน้า A4',  gcols:6, grows:8,  cellX:0,cellY:0,cellW:50, cellH:47},
-  {id:'sixth', name:'กลาง',    ratio:'1 รูป ต่อ ⅙ หน้า A4',  gcols:6, grows:5,  cellX:0,cellY:0,cellW:50, cellH:30},
-  {id:'ninth', name:'เล็ก',    ratio:'1 รูป ต่อ ⅑ หน้า A4',  gcols:4, grows:5,  cellX:0,cellY:0,cellW:33, cellH:30},
-  {id:'sixteen',name:'เล็กมาก',ratio:'1 รูป ต่อ 1/16 หน้า A4',gcols:3,grows:4,  cellX:0,cellY:0,cellW:25, cellH:24},
+  {id:'half',   name:'ใหญ่มาก', ratio:'½ A4',  gcols:12,grows:8, cellX:0,cellY:0,cellW:100,cellH:47},
+  {id:'qtr',    name:'ใหญ่',    ratio:'¼ A4',  gcols:6, grows:8, cellX:0,cellY:0,cellW:50, cellH:47},
+  {id:'sixth',  name:'กลาง',    ratio:'⅙ A4',  gcols:6, grows:5, cellX:0,cellY:0,cellW:50, cellH:30},
+  {id:'ninth',  name:'เล็ก',    ratio:'⅑ A4',  gcols:4, grows:5, cellX:0,cellY:0,cellW:33, cellH:30},
+  {id:'sixteen',name:'จิ๋ว',    ratio:'1/16',  gcols:3, grows:4, cellX:0,cellY:0,cellW:25, cellH:24},
 ];
 const GRID_COLS=12,GRID_ROWS=17;
 
-let toys=[],editingId=null,workingSrc=null,selectedSizeId='ninth';
+let toys=[],editingId=null,workingSrc=null,originalSrcForEdit=null,selectedSizeId='half',rotationDeg=0;
 let cd={on:false,sx:0,sy:0,ox:0,oy:0};
 let pageSelected=[];
 let queue=[], queueTotal=0;
@@ -450,6 +486,37 @@ function previewFS(gcols){ return gcols>=8?'17px':gcols>=6?'14px':gcols>=4?'12px
 function pdfFS(gcols){ return gcols>=8?12:gcols>=6?9:gcols>=4?8:7; }
 
 // ===== SOURCE =====
+// ===== SCROLL TO TOY IN PREVIEW =====
+function scrollToToy(toyId){
+  // find the page that contains this toy
+  const pages=packToys();
+  let pageIdx=-1;
+  pages.forEach((pg,i)=>{
+    if(pg.some(p=>p.toy.id===toyId)) pageIdx=i;
+  });
+  if(pageIdx===-1) return;
+  // find the page-preview element and scroll to it
+  const previews=document.querySelectorAll('.page-preview');
+  if(previews[pageIdx]){
+    setTimeout(()=>{
+      previews[pageIdx].scrollIntoView({behavior:'smooth',block:'center'});
+    },150);
+  }
+}
+
+// ===== CONFIRM DIALOG =====
+let confirmCallback=null;
+function showConfirm(msg,cb){
+  confirmCallback=cb;
+  document.getElementById('confirmMsg').textContent=msg;
+  document.getElementById('confirmOkBtn').onclick=()=>{closeConfirm();cb();};
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function closeConfirm(){
+  document.getElementById('confirmOverlay').classList.remove('open');
+  confirmCallback=null;
+}
+
 function closeSrcModal(){document.getElementById('srcModal').classList.remove('open');}
 function pickCamera(){closeSrcModal();document.getElementById('fiCamera').click();}
 function pickGallery(){closeSrcModal();document.getElementById('fiGallery').click();}
@@ -457,6 +524,7 @@ function pickGallery(){closeSrcModal();document.getElementById('fiGallery').clic
 function handleFiles(files){
   const arr=Array.from(files);
   if(!arr.length) return;
+  // read ALL files first, then start queue
   let loaded=0;
   const srcs=new Array(arr.length);
   arr.forEach((f,i)=>{
@@ -464,9 +532,10 @@ function handleFiles(files){
     r.onload=ev=>{
       srcs[i]=ev.target.result;
       if(++loaded===arr.length){
+        // all files read — add to queue and start
         const wasEmpty=queue.length===0;
-        queue=[...queue,...srcs.map(src=>({src}))];
-        queueTotal+=srcs.length;
+        srcs.forEach(src=>queue.push({src}));
+        queueTotal=queue.length;
         if(wasEmpty) processQueue();
       }
     };
@@ -484,29 +553,34 @@ function processQueue(){
 
 // ===== MODAL =====
 function openModalNew(src, current, total){
-  editingId=null;workingSrc=src;selectedSizeId='ninth';
+  rotationDeg=0;
+  workingSrc=src;          // working copy — may change if user rotates
+  originalSrcForEdit=src;  // true original — never changes
+  editingId=null;selectedSizeId='half';
   const titleEl=document.getElementById('modalTitle');
   titleEl.textContent = total>1 ? `➕ เพิ่มของเล่น (${current}/${total})` : '➕ เพิ่มของเล่น';
   document.getElementById('nameInp').value='';
   document.getElementById('zoomSlider').value=100;
   document.getElementById('zoomVal').textContent='100%';
   const img=document.getElementById('cropImg');
-  img.src=src; img.onload=()=>posImg(0,0,100);
+  img.src=src; img.onload=()=>requestAnimationFrame(()=>autoFitImg());
   renderSizeOptions();
   document.getElementById('modal').classList.add('open');
 }
 function openModalEdit(id){
+  rotationDeg=0;
   const t=toys.find(x=>x.id===id);if(!t)return;
   editingId=id;
   // use originalSrc if available so user can re-crop from full image
-  workingSrc=t.originalSrc||t.croppedSrc;
+  originalSrcForEdit=t.originalSrc||t.croppedSrc; // true original — never changes
+  workingSrc=originalSrcForEdit;                  // working copy — may change if user rotates
   selectedSizeId=t.sizeId;
   document.getElementById('modalTitle').textContent='✏️ แก้ไขของเล่น';
   document.getElementById('nameInp').value=t.name;
   document.getElementById('zoomSlider').value=100;
   document.getElementById('zoomVal').textContent='100%';
   const img=document.getElementById('cropImg');
-  img.src=workingSrc; img.onload=()=>posImg(0,0,100);
+  img.src=workingSrc; img.onload=()=>requestAnimationFrame(()=>autoFitImg());
   renderSizeOptions();
   document.getElementById('modal').classList.add('open');
 }
@@ -516,9 +590,9 @@ function closeModal(){document.getElementById('modal').classList.remove('open');
 function renderSizeOptions(){
   const wrap=document.getElementById('sizeOptions');
   wrap.innerHTML='';
-  [[SIZES[0]],[SIZES[1],SIZES[2]],[SIZES[3],SIZES[4]]].forEach(row=>{
+  [SIZES].forEach(row=>{
     const rd=document.createElement('div');
-    rd.className='size-row'+(row.length===1?' single':'');
+    rd.className='size-row';
     row.forEach(sz=>{
       const d=document.createElement('div');
       d.className='size-opt'+(sz.id===selectedSizeId?' selected':'');
@@ -558,6 +632,49 @@ function posImg(cx,cy,zoom){
   img.style.width=w+'px';img.style.height='auto';
   img.style.left=cx+'px';img.style.top=cy+'px';
 }
+
+function autoFitImg(){
+  const img=document.getElementById('cropImg');
+  const area=document.getElementById('cropArea');
+  const aW=area.offsetWidth;
+  const aH=area.offsetHeight;
+  const nW=img.naturalWidth||1;
+  const nH=img.naturalHeight||1;
+  // fit by width, check if height overflows
+  const hAtFull=nH*(aW/nW);
+  let zoom=100;
+  if(hAtFull>aH){
+    zoom=Math.max(5,Math.floor((aH/nH)*(nW/aW)*100));
+  }
+  // center image
+  const imgW=aW*(zoom/100);
+  const imgH=nH*(imgW/nW);
+  const cx=(aW-imgW)/2;
+  const cy=(aH-imgH)/2;
+  document.getElementById('zoomSlider').value=zoom;
+  document.getElementById('zoomVal').textContent=zoom+'%';
+  posImg(cx,cy,zoom);
+}
+function rotateCropImg(){
+  const img=document.getElementById('cropImg');
+  // draw current workingSrc rotated 90deg into a new canvas
+  const tmpImg=new Image();
+  tmpImg.onload=()=>{
+    const c=document.createElement('canvas');
+    c.width=tmpImg.naturalHeight;
+    c.height=tmpImg.naturalWidth;
+    const ctx=c.getContext('2d');
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,c.width,c.height);
+    ctx.translate(c.width/2,c.height/2);
+    ctx.rotate(Math.PI/2);
+    ctx.drawImage(tmpImg,-tmpImg.naturalWidth/2,-tmpImg.naturalHeight/2);
+    workingSrc=c.toDataURL('image/png');
+    img.src=workingSrc;
+    img.onload=()=>requestAnimationFrame(()=>autoFitImg());
+  };
+  tmpImg.src=workingSrc;
+}
+
 document.getElementById('zoomSlider').addEventListener('input',function(){
   document.getElementById('zoomVal').textContent=this.value+'%';
   const img=document.getElementById('cropImg');
@@ -587,7 +704,6 @@ function confirmToy(){
   const aH=area.offsetHeight;
   const iW=aW*(zoom/100);
   const iH=imgEl.naturalHeight*(iW/imgEl.naturalWidth);
-  // scale factor from display px to natural image px
   const toPx=imgEl.naturalWidth/iW;
   // visible region in natural image coords
   const srcX=Math.max(0,-cx*toPx);
@@ -604,28 +720,37 @@ function confirmToy(){
   const croppedSrc=canvas.toDataURL('image/png');
   if(editingId){
     const t=toys.find(x=>x.id===editingId);
-    if(t){t.croppedSrc=croppedSrc;t.name=name;t.sizeId=selectedSizeId;}
-    // keep originalSrc unchanged
+    if(t){
+      t.croppedSrc=croppedSrc;
+      t.name=name;
+      t.sizeId=selectedSizeId;
+      // originalSrc stays unchanged — always keep true original
+      if(!t.originalSrc) t.originalSrc=originalSrcForEdit;
+    }
   } else {
     toys.push({
       id:'toy_'+Date.now()+'_'+Math.random().toString(36).slice(2),
-      originalSrc:workingSrc, // save original for re-editing
+      originalSrc:originalSrcForEdit, // always save the true original
       croppedSrc,name,sizeId:selectedSizeId
     });
   }
+  const savedId=editingId|| toys[toys.length-1]?.id;
   // queue: advance to next
   if(!editingId && queue.length>0){
     queue.shift();
     closeModal();
     renderAll();
+    scrollToToy(savedId);
     if(queue.length>0){
       const current=queueTotal-queue.length+1;
-      setTimeout(()=>openModalNew(queue[0].src, current, queueTotal), 250);
+      const nextSrc=queue[0].src;
+      setTimeout(()=>openModalNew(nextSrc, current, queueTotal), 250);
     } else {
       queueTotal=0;
     }
   } else {
     closeModal(); renderAll();
+    scrollToToy(savedId);
   }
 }
 
@@ -805,13 +930,15 @@ openDB().then(async ()=>{
     localStorage.setItem('icap_tut_done','1');
   }
 });
+function deleteToyFromPreview(id){
+  showConfirm('ลบของเล่นชิ้นนี้ออกไหมคะ?', ()=>delToy(id));
+}
+
 function clearAllToys(){
   if(!toys.length) return;
-  if(!confirm('ลบของเล่นทั้งหมด ' + toys.length + ' ชิ้น ใช่ไหมคะ?')) return;
-  toys=[];
-  slots=[];
-  pageSelected=[];
-  renderAll();
+  showConfirm('ลบของเล่นทั้งหมด ' + toys.length + ' ชิ้น ใช่ไหมคะ?', ()=>{
+    toys=[];slots=[];pageSelected=[];renderAll();
+  });
 }
 
 function delToy(id){toys=toys.filter(t=>t.id!==id);renderAll();}
@@ -860,29 +987,11 @@ function renderAll(){
   const es=document.getElementById('emptyState');
   const ps=document.getElementById('pagesSection');
   document.getElementById('toyCount').textContent=toys.length;
-  ts.style.display=toys.length?'block':'none';
+  ts.style.display='none'; // grid removed
   es.style.display=toys.length?'none':'block';
   ps.style.display=toys.length?'block':'none';
 
-  // toy list
-  const list=document.getElementById('toyList');
-  list.innerHTML='';
-  toys.forEach(toy=>{
-    const d=document.createElement('div');d.className='toy-card';
-    d.innerHTML=`
-      <div class="toy-thumb-wrap">
-        <img class="toy-thumb" src="${toy.croppedSrc}" alt="">
-      </div>
-      <div class="toy-name">${toy.name||''}</div>
-      <div class="toy-actions">
-        <button class="toy-btn toy-edit" title="แก้ไข">✏️</button>
-        <button class="toy-btn toy-del" title="ลบ">✕</button>
-      </div>`;
-    d.querySelector('.toy-edit').onclick=(e)=>{e.stopPropagation();openModalEdit(toy.id);};
-    d.querySelector('.toy-del').onclick=(e)=>{e.stopPropagation();delToy(toy.id);};
-    d.onclick=()=>openModalEdit(toy.id);
-    list.appendChild(d);
-  });
+  // grid removed — edit/delete via preview A4 overlay
 
   // pages
   const pages=packToys();
@@ -920,12 +1029,14 @@ function renderAll(){
       const fs=previewFS(p.gcols);
       const lblHtml=p.toy.name?`<div class="a4-cell-lbl" style="font-size:${fs}">${p.toy.name}</div>`:'';
       cell.innerHTML=`<div class="a4-cell-img"><img src="${p.toy.croppedSrc}" alt=""></div>${lblHtml}`;
-      const editBtn=document.createElement('button');
-      editBtn.className='cell-edit-btn';
-      editBtn.textContent='✏️';
-      editBtn.title='แก้ไขรูปนี้';
-      editBtn.onclick=()=>openModalEdit(p.toy.id);
-      cell.appendChild(editBtn);
+      // action buttons overlay — visible on hover/tap
+      const overlay=document.createElement('div');
+      overlay.className='cell-overlay';
+      overlay.innerHTML=`
+        <button class="cell-action-btn cell-edit" onclick="openModalEdit('${p.toy.id}')">✏️ แก้ไข</button>
+        <button class="cell-action-btn cell-delete" onclick="deleteToyFromPreview('${p.toy.id}')">🗑 ลบ</button>
+      `;
+      cell.appendChild(overlay);
       g.appendChild(cell);
     });
     a4.appendChild(g);
