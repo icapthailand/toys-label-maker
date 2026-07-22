@@ -483,7 +483,7 @@ let pageSelected=[];
 let queue=[], queueTotal=0;
 
 function previewFS(gcols){ return gcols>=8?'17px':gcols>=6?'14px':gcols>=4?'12px':'9px'; }
-function pdfFS(gcols){ return gcols>=8?12:gcols>=6?9:gcols>=4?8:7; }
+function pdfFS(gcols){ return gcols>=8?20:gcols>=6?17:gcols>=4?14:11; }
 
 // ===== SOURCE =====
 // ===== SCROLL TO TOY IN PREVIEW =====
@@ -699,24 +699,24 @@ function confirmToy(){
   const zoom=parseInt(document.getElementById('zoomSlider').value);
   const name=document.getElementById('nameInp').value.trim();
   const cx=parseInt(imgEl.style.left)||0,cy=parseInt(imgEl.style.top)||0;
-  // crop = exactly what's visible in the crop-area box
+  // WYSIWYG crop: export exactly the crop-area box as seen on screen
   const aW=area.offsetWidth;
   const aH=area.offsetHeight;
-  const iW=aW*(zoom/100);
-  const iH=imgEl.naturalHeight*(iW/imgEl.naturalWidth);
-  const toPx=imgEl.naturalWidth/iW;
-  // visible region in natural image coords
-  const srcX=Math.max(0,-cx*toPx);
-  const srcY=Math.max(0,-cy*toPx);
-  const srcW=Math.min(imgEl.naturalWidth-srcX, aW*toPx);
-  const srcH=Math.min(imgEl.naturalHeight-srcY, aH*toPx);
-  const outW=Math.round(srcW);
-  const outH=Math.round(srcH);
+  const iW=aW*(zoom/100);                               // displayed image width (px)
+  const iH=imgEl.naturalHeight*(iW/imgEl.naturalWidth); // displayed image height (px)
+  let scale=imgEl.naturalWidth/iW;                      // screen px -> natural px
+  // cap output resolution so very-low zoom doesn't create a giant canvas
+  const MAXOUT=2000;
+  scale*=Math.min(1, MAXOUT/Math.max(aW*scale, aH*scale));
+  const outW=Math.max(1,Math.round(aW*scale));
+  const outH=Math.max(1,Math.round(aH*scale));
   const canvas=document.createElement('canvas');
-  canvas.width=Math.max(1,outW); canvas.height=Math.max(1,outH);
+  canvas.width=outW; canvas.height=outH;
   const ctx=canvas.getContext('2d');
   ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,outW,outH);
-  ctx.drawImage(imgEl,srcX,srcY,srcW,srcH,0,0,outW,outH);
+  // draw image exactly where it sits in the box (offsets may be negative = cropped)
+  ctx.drawImage(imgEl, Math.round(cx*scale), Math.round(cy*scale),
+                       Math.round(iW*scale), Math.round(iH*scale));
   const croppedSrc=canvas.toDataURL('image/png');
   if(editingId){
     const t=toys.find(x=>x.id===editingId);
@@ -1053,8 +1053,9 @@ function buildPrintHtml(selectedPages){
   selectedPages.forEach(pageToys=>{
     let cells='';
     pageToys.forEach(p=>{
+      const fs=pdfFS(p.gcols);
       const lblHtml=p.toy.name
-        ?`<div class="pl">${p.toy.name}</div>`:'';
+        ?`<div class="pl" style="font-size:${fs}pt">${p.toy.name}</div>`:'';
       cells+=`<div class="pc" style="grid-column:${p.col+1}/span ${p.gcols};grid-row:${p.row+1}/span ${p.grows};">
         <div class="pi"><img src="${p.toy.croppedSrc}" alt=""></div>${lblHtml}</div>`;
     });
@@ -1070,13 +1071,15 @@ function buildPrintHtml(selectedPages){
     grid-template-columns:repeat(${GRID_COLS},1fr);
     grid-template-rows:repeat(${GRID_ROWS},1fr);
     page-break-after:always;background:white;}
-  .pc{border:1mm solid #000;overflow:hidden;display:flex;flex-direction:column;background:white;}
+  .pc{border:0.35mm solid #bbb;border-radius:1mm;overflow:hidden;
+    display:flex;flex-direction:column;background:white;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .pi{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
-    background:white;padding:1mm;overflow:hidden;}
-  .pi img{max-width:100%;max-height:100%;object-fit:contain;}
-  .pl{text-align:center;padding:1mm 2mm 2.5mm;flex-shrink:0;font-size:20pt;
+    background:white;padding:0.4mm;overflow:hidden;}
+  .pi img{width:100%;height:100%;object-fit:contain;}
+  .pl{text-align:center;padding:0.6mm 1.2mm 1.8mm;flex-shrink:0;
     font-family:'Sarabun',sans-serif;font-weight:400;color:#1A1A2E;
-    word-break:break-word;white-space:normal;line-height:1.4;background:white;}
+    word-break:break-word;white-space:normal;line-height:1.3;background:white;}
 </style></head><body>${pagesHtml}</body></html>`;
 }
 
